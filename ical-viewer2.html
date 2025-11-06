@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iCalendar (.ics) Event Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: #F3F4F6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 72rem; /* 1152px */
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem;
+        }
+
+        /* --- Header & File Input --- */
+        .page-header {
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin: 0;
+        }
+        .page-header p {
+            color: #4B5563;
+            margin-top: 0.5rem;
+        }
+        .file-input-container {
+            margin-top: 1.5rem;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-button {
+            cursor: pointer;
+            background-color: #2563EB;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .file-input-button:hover {
+            background-color: #1D4ED8;
+        }
+
+        /* --- Message Area --- */
+        #messageArea {
+            text-align: center;
+            padding: 1rem;
+        }
+        .message-info {
+            font-size: 1.125rem;
+            color: #2563EB;
+        }
+        .message-error {
+            font-size: 1.125rem;
+            color: #DC2626;
+        }
+        .message-error-details {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 0.5rem;
+        }
+
+        /* --- Event List & Cards --- */
+        #eventList {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1.5rem;
+        }
+        .event-card {
+            background-color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .event-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .event-summary {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1D4ED8;
+            margin: 0;
+            /* Allow header to shrink but title to wrap */
+            min-width: 0;
+            word-wrap: break-word;
+        }
+        .toggle-icon {
+            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            /* Prevent icon from shrinking */
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+        }
+        .toggle-icon svg {
+            height: 1.25rem;
+            width: 1.25rem;
+            color: #6B7280;
+        }
+
+        /* --- Collapsible Details --- */
+        .event-details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #E5E7EB;
+        }
+        .detail-item {
+            font-size: 0.875rem;
+            color: #374151;
+            margin-top: 0.5rem;
+            word-wrap: break-word;
+        }
+        .detail-label {
+            font-weight: 500;
+            color: #111827;
+        }
+        .recurring-badge {
+            display: inline-block;
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.125rem 0.625rem;
+            border-radius: 9999px;
+            margin-top: 1rem;
+        }
+
+        /* --- Utility Classes --- */
+        .hidden {
+            display: none;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        /* --- Responsive Grid --- */
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem;
+            }
+            #eventList {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) {
+            #eventList {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+    <div class="container">
+        <header class="page-header">
+            <h1>iCalendar (.ics) Event Viewer</h1>
+            <p>Upload your .ics file to see all the events listed as cards below.</p>
+
+            <!-- Styled File Input -->
+            <div class="file-input-container">
+                <label for="icsFile" class="file-input-wrapper">
+                    <span class="file-input-button">
+                        Select .ics File
+                    </span>
+                    <input type="file" id="icsFile" accept=".ics,text/calendar">
+                </label>
+            </div>
+        </header>
+
+        <!-- Message Area for loading or errors -->
+        <div id="messageArea" class="text-center p-4"></div>
+
+        <!-- Event List Container -->
+        <div id="eventList">
+            <!-- Event cards will be dynamically inserted here -->
+        </div>
+
+    </div>
+    <script>
+       if(!Array.prototype.chunk){
+           Array.prototype.chunk = async function chunk(func, chunkSize=500, index=0) {
+               if(index >= this.length) return Promise.resolve(true);
+               if(chunkSize <= 0) chunkSize = 1;
+               if(index <= 0) index = 0;
+               for(var csz=0; csz<chunkSize && index<this.length; index++, csz++){ // Use var for csz
+                   func(this[index]);
+               }
+               return new Promise(resolve=>{
+                   // Use requestAnimationFrame to yield to the main thread
+                   requestAnimationFrame(() => {
+                       resolve(this.chunk(func, chunkSize, index));
+                   });
+               });
+           }
+       }
+    </script>
+    <script>
+        document.getElementById('icsFile').addEventListener('change', handleFileSelect, false);
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            const eventList = document.getElementById('eventList');
+            const messageArea = document.getElementById('messageArea');
+
+            // Clear previous results
+            eventList.innerHTML = '';
+            messageArea.innerHTML = '<p class="message-info">Parsing your calendar...</p>';
+
+            // --- FIX: Make the onload function async ---
+            reader.onload = async function(e) { // <-- Made this function async
+                const fileContent = e.target.result;
+
+                try {
+                    // 1. Parse the iCalendar data using ical.js
+                    const jcalData = ICAL.parse(fileContent);
+
+                    // 2. Wrap the jcal data in a component
+                    const vcalendar = new ICAL.Component(jcalData);
+
+                    // 3. Get all 'vevent' (event) subcomponents
+                    const vevents = vcalendar.getAllSubcomponents('vevent');
+
+                    // --- Update message, but don't clear it yet ---
+                    messageArea.innerHTML = '<p class="message-info">Processing events...</p>'; // Changed message
+
+                    if (vevents.length === 0) {
+                        messageArea.innerHTML = '<p class="message-error">No events found in this file.</p>';
+                        return;
+                    }
+
+                    // 4. --- REMOVED --- Map vevents to an array of event objects
+
+                    // 5. --- REMOVED --- Sort the array by startDate.
+
+                    // 6. Process the original 'vevents' array in chunks
+                    messageArea.innerHTML = `<p class="message-info">Rendering ${vevents.length} events...</p>`;
+
+                    // Use the new chunk method, await its completion
+                    // This 'await' is now valid because reader.onload is async
+                    await vevents.chunk(appendEventCard, 50); // <-- Use vevents directly
+
+                    messageArea.innerHTML = ''; // All done
+
+                } catch (err) {
+                    console.error('Error parsing iCalendar file:', err);
+                    messageArea.innerHTML = `<p class="message-error">Error: Could not parse the file. Please ensure it is a valid .ics file.</p><p class="message-error-details">${err.message}</p>`;
+                }
+            };
+
+            // Read the file as text
+            reader.readAsText(file);
+        }
+
+        /**
+         * Helper function to create a styled detail element (e.g., "Label: Value")
+         */
+        function createDetailElement(label, value) {
+            if (!value) {
+                return document.createDocumentFragment();
+            }
+
+            const p = document.createElement('p');
+            p.className = 'detail-item';
+
+            const strong = document.createElement('strong');
+            strong.className = 'detail-label';
+            strong.textContent = `${label}: `;
+
+            const text = document.createTextNode(value);
+
+            p.appendChild(strong);
+            p.appendChild(text);
+
+            return p;
+        }
+
+        /**
+         * Creates a single event card and appends it to the event list.
+         * This function is called by the Array.prototype.chunk method.
+         */
+        function appendEventCard(vevent) {
+            const eventListElement = document.getElementById('eventList');
+            if (!eventListElement) return;
+
+            const event = new ICAL.Event(vevent);
+            const startDate = event.startDate ? event.startDate.toJSDate() : null;
+
+            const card = document.createElement('div');
+            card.className = 'event-card';
+
+            const header = document.createElement('div');
+            header.className = 'event-card-header';
+
+            const summary = document.createElement('h3');
+            summary.className = 'event-summary';
+            summary.textContent = event.summary || 'No Title';
+            header.appendChild(summary);
+
+            const toggleIcon = document.createElement('span');
+            toggleIcon.className = 'toggle-icon';
+            toggleIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
+            header.appendChild(toggleIcon);
+
+            card.appendChild(header);
+
+            const detailsContainer = document.createElement('div');
+            detailsContainer.className = 'event-details hidden';
+
+            const start = startDate ? startDate.toLocaleString() : 'N/A';
+            detailsContainer.appendChild(createDetailElement('Start', start));
+
+            const end = event.endDate ? event.endDate.toJSDate().toLocaleString() : 'N/A';
+            detailsContainer.appendChild(createDetailElement('End', end));
+
+            detailsContainer.appendChild(createDetailElement('Location', event.location));
+            detailsContainer.appendChild(createDetailElement('Description', event.description));
+
+            const organizerProp = vevent.getFirstProperty('organizer'); // <-- Use vevent
+            let organizerName = null;
+            if (organizerProp) {
+                organizerName = organizerProp.getParameter('cn') || organizerProp.getValue().toString();
+                organizerName = organizerName.replace('MAILTO:', '');
+            }
+            detailsContainer.appendChild(createDetailElement('Organizer', organizerName));
+
+            if (event.isRecurring()) {
+                const recurringBadge = document.createElement('span');
+                recurringBadge.className = 'recurring-badge';
+                recurringBadge.textContent = 'Recurring Event';
+                detailsContainer.appendChild(recurringBadge);
+            }
+
+            card.appendChild(detailsContainer);
+
+            header.addEventListener('click', () => {
+                detailsContainer.classList.toggle('hidden');
+                toggleIcon.classList.toggle('rotate-180');
+            });
+
+            eventListElement.appendChild(card);
+        }
+    </script>
+    <script >
+        const TAG_NAME = '';
+        customElement.define(
+            TAG_NAME,
+            class Component extends HTMLElement {
+                static TAG_NAME = TAG_NAME;
+
+                static get observedAttributes() {
+                    return [];
+                }
+
+                static __registerElement() {
+                    customElement.define(TAG_NAME, Component);
+                }
+
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: 'open' });
+                    this.__initDom(this.shadowRoot);
+                    this.__attachEventListeners();
+                }
+
+                attributeChangedCallback(name, oldValue, newValue) {
+                    if(oldValue === newValue) return;
+                    console.debug('Attribute changed', name, oldValue, newValue);
+                    switch(name) {
+                        break;
+                    default:
+                        console.error('Unknown attribute');
+                    }
+                }
+
+                render() {
+                    //const clone2 = template.content.cloneNode(true)
+                    let template = document.createElement('div'),
+                        styles = document.createElement('style');
+                    template.innerHTML = Component.html;
+                    styles.textContent = Component.css;
+                    return [styles, ...Array.prototype.slice.call(template.childNodes).filter(n => !(n instanceof Text))];
+                }
+
+                _initDom(rootElem) {
+                    rootElem.append(...this.render());
+                    return this;
+                }
+
+                _attachEventListeners() {
+                    return this;
+                }
+
+                static css = ``;
+                static html = `
+                <template id="templ-event-card">
+                    <div class="event-card">
+                        <div class="event-card-header">
+                            <details>
+                                <summary><slot name="event-summary-slot">No Summary</slot></summary>
+                                <div class="event-content">
+                                    <slot name="event-details-slot">No details</slot>
+                                </div>
+                            </details>
+                        </div>
+                        <div class="event-details">
+                            <p class="detail-item">
+                                <strong class="detail-label">Start: </strong>4/8/2010, 12:00:00 AM
+                            </p>
+                            <p class="detail-item">
+                                <strong class="detail-label">End: </strong>4/9/2010, 12:00:00 AM
+                            </p>
+                        </div>
+                    </div>
+                </template>
+                <template id="templ-recurring-badge">
+                    <span class="recurring-badge">Recurring Event</span>
+                </template>
+                `;
+            }
+        );
+        export default customElement.get(TAG_NAME);
+    </script>
+
+</body>
+</html>
