@@ -378,84 +378,319 @@
         }
     </script>
     <script >
-        const TAG_NAME = '';
-        customElement.define(
-            TAG_NAME,
-            class Component extends HTMLElement {
-                static TAG_NAME = TAG_NAME;
+        (function icalViewer() {
+            const TAG_NAME = 'ical-viewer';
+            customElement.define(
+                TAG_NAME,
+                class iCalViewer extends HTMLElement {
+                    static TAG_NAME = TAG_NAME;
 
-                static get observedAttributes() {
-                    return [];
-                }
-
-                static __registerElement() {
-                    customElement.define(TAG_NAME, Component);
-                }
-
-                constructor() {
-                    super();
-                    this.attachShadow({ mode: 'open' });
-                    this.__initDom(this.shadowRoot);
-                    this.__attachEventListeners();
-                }
-
-                attributeChangedCallback(name, oldValue, newValue) {
-                    if(oldValue === newValue) return;
-                    console.debug('Attribute changed', name, oldValue, newValue);
-                    switch(name) {
-                        break;
-                    default:
-                        console.error('Unknown attribute');
+                    static get observedAttributes() {
+                        return [];
                     }
-                }
 
-                render() {
-                    //const clone2 = template.content.cloneNode(true)
-                    let template = document.createElement('div'),
-                        styles = document.createElement('style');
-                    template.innerHTML = Component.html;
-                    styles.textContent = Component.css;
-                    return [styles, ...Array.prototype.slice.call(template.childNodes).filter(n => !(n instanceof Text))];
-                }
+                    static __registerElement() {
+                        customElement.define(TAG_NAME, iCalViewer);
+                    }
 
-                _initDom(rootElem) {
-                    rootElem.append(...this.render());
-                    return this;
-                }
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' });
+                        this.__initDom(this.shadowRoot);
+                        this.__attachEventListeners();
+                    }
 
-                _attachEventListeners() {
-                    return this;
-                }
+                    attributeChangedCallback(name, oldValue, newValue) {
+                        if(oldValue === newValue) return;
+                        console.debug('Attribute changed', name, oldValue, newValue);
+                        switch(name) {
+                            break;
+                        default:
+                            console.error('Unknown attribute');
+                        }
+                    }
 
-                static css = ``;
-                static html = `
-                <template id="templ-event-card">
-                    <div class="event-card">
-                        <div class="event-card-header">
-                            <details>
-                                <summary><slot name="event-summary-slot">No Summary</slot></summary>
-                                <div class="event-content">
-                                    <slot name="event-details-slot">No details</slot>
-                                </div>
-                            </details>
+                    render() {
+                        //const clone2 = template.content.cloneNode(true)
+                        let template = document.createElement('div'),
+                            styles = document.createElement('style');
+                        template.innerHTML = iCalViewer.html;
+                        styles.textContent = iCalViewer.css;
+                        return [styles, ...Array.prototype.slice.call(template.childNodes).filter(n => !(n instanceof Text))];
+                    }
+
+                    _initDom(rootElem) {
+                        rootElem.append(...this.render());
+                        return this;
+                    }
+
+                    _attachEventListeners() {
+                        return this;
+                    }
+
+                    static css = `
+                        :root {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+                            background-color: #F3F4F6;
+                            -webkit-font-smoothing: antialiased;
+                            -moz-osx-font-smoothing: grayscale;
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        .container {
+                            max-width: 72rem; /* 1152px */
+                            margin-left: auto;
+                            margin-right: auto;
+                            padding: 1rem;
+                        }
+
+                        .page-header {
+                            background-color: #ffffff;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                            border-radius: 0.5rem;
+                            padding: 1.5rem;
+                            margin-bottom: 2rem;
+                        }
+                        .page-header h1 {
+                            font-size: 1.875rem;
+                            font-weight: 700;
+                            color: #1F2937;
+                            margin: 0;
+                        }
+                        .page-header p {
+                            color: #4B5563;
+                            margin-top: 0.5rem;
+                        }
+                        .file-input-container {
+                            margin-top: 1.5rem;
+                        }
+                        .file-input-wrapper {
+                            position: relative;
+                            overflow: hidden;
+                            display: inline-block;
+                            cursor: pointer;
+                        }
+                        .file-input-wrapper input[type=file] {
+                            font-size: 100px;
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            opacity: 0;
+                            cursor: pointer;
+                        }
+                        .file-input-button {
+                            cursor: pointer;
+                            background-color: #2563EB;
+                            color: #ffffff;
+                            font-weight: 600;
+                            padding: 0.5rem 1rem;
+                            border-radius: 0.5rem;
+                            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .file-input-button:hover {
+                            background-color: #1D4ED8;
+                        }
+
+                        #messageArea {
+                            text-align: center;
+                            padding: 1rem;
+                        }
+                        .message-info {
+                            font-size: 1.125rem;
+                            color: #2563EB;
+                        }
+                        .message-error {
+                            font-size: 1.125rem;
+                            color: #DC2626;
+                        }
+                        .message-error-details {
+                            font-size: 0.875rem;
+                            color: #6B7280;
+                            margin-top: 0.5rem;
+                        }
+
+                        #eventList {
+                            display: grid;
+                            grid-template-columns: repeat(1, minmax(0, 1fr));
+                            gap: 1.5rem;
+                        }
+                        /* --- Utility Classes --- */
+                        .hidden {
+                            display: none;
+                        }
+                        /* --- Responsive Grid --- */
+                        @media (min-width: 768px) {
+                            .container {
+                                padding: 2rem;
+                            }
+                            #eventList {
+                                grid-template-columns: repeat(2, minmax(0, 1fr));
+                            }
+                        }
+                        @media (min-width: 1024px) {
+                            #eventList {
+                                grid-template-columns: repeat(3, minmax(0, 1fr));
+                            }
+                        }
+                    `;
+                    static html = ``;
+                }
+            );
+            export default customElement.get(TAG_NAME);
+        })();
+    </script>
+    <script >
+        (function icalEvent() {
+            const TAG_NAME = 'ical-event';
+            customElement.define(
+                TAG_NAME,
+                class iCalEvent extends HTMLElement {
+                    static TAG_NAME = TAG_NAME;
+
+                    static get observedAttributes() {
+                        return [];
+                    }
+
+                    static __registerElement() {
+                        customElement.define(TAG_NAME, iCalEvent);
+                    }
+
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: 'open' });
+                        this.__initDom(this.shadowRoot);
+                        this.__attachEventListeners();
+                    }
+
+                    attributeChangedCallback(name, oldValue, newValue) {
+                        if(oldValue === newValue) return;
+                        console.debug('Attribute changed', name, oldValue, newValue);
+                        switch(name) {
+                            break;
+                        default:
+                            console.error('Unknown attribute');
+                        }
+                    }
+
+                    render() {
+                        //const clone2 = template.content.cloneNode(true)
+                        let template = document.createElement('div'),
+                            styles = document.createElement('style');
+                        template.innerHTML = iCalEvent.html;
+                        styles.textContent = iCalEvent.css;
+                        return [styles, ...Array.prototype.slice.call(template.childNodes).filter(n => !(n instanceof Text))];
+                    }
+
+                    _initDom(rootElem) {
+                        rootElem.append(...this.render());
+                        return this;
+                    }
+
+                    _attachEventListeners() {
+                        return this;
+                    }
+
+                    static css = `
+                        .event-card {
+                            background-color: #ffffff;
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                            border-radius: 0.5rem;
+                            padding: 1.5rem;
+                            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .event-card-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            cursor: pointer;
+                        }
+                        .event-summary {
+                            font-size: 1.25rem;
+                            font-weight: 700;
+                            color: #1D4ED8;
+                            margin: 0;
+                            /* Allow header to shrink but title to wrap */
+                            min-width: 0;
+                            word-wrap: break-word;
+                        }
+                        .toggle-icon {
+                            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+                            /* Prevent icon from shrinking */
+                            flex-shrink: 0;
+                            margin-left: 0.5rem;
+                        }
+                        .toggle-icon svg {
+                            height: 1.25rem;
+                            width: 1.25rem;
+                            color: #6B7280;
+                        }
+
+                        /* --- Collapsible Details --- */
+                        .event-details {
+                            margin-top: 1rem;
+                            padding-top: 1rem;
+                            border-top: 1px solid #E5E7EB;
+                        }
+                        .detail-item {
+                            font-size: 0.875rem;
+                            color: #374151;
+                            margin-top: 0.5rem;
+                            word-wrap: break-word;
+                        }
+                        .detail-label {
+                            font-weight: 500;
+                            color: #111827;
+                        }
+                        .recurring-badge {
+                            display: inline-block;
+                            background-color: #DBEAFE;
+                            color: #1E40AF;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            padding: 0.125rem 0.625rem;
+                            border-radius: 9999px;
+                            margin-top: 1rem;
+                        }
+
+                        /* --- Utility Classes --- */
+                        .hidden {
+                            display: none;
+                        }
+                        .rotate-180 {
+                            transform: rotate(180deg);
+                        }
+                    `;
+                    static html = `
+                    <template id="templ-event-card">
+                        <div class="event-card">
+                            <div class="event-card-header">
+                                <details>
+                                    <summary><slot name="event-summary-slot">No Summary</slot></summary>
+                                    <div class="event-content">
+                                        <slot name="event-details-slot">No details</slot>
+                                    </div>
+                                </details>
+                            </div>
+                            <div class="event-details">
+                                <p class="detail-item">
+                                    <strong class="detail-label">Start: </strong>4/8/2010, 12:00:00 AM
+                                </p>
+                                <p class="detail-item">
+                                    <strong class="detail-label">End: </strong>4/9/2010, 12:00:00 AM
+                                </p>
+                            </div>
                         </div>
-                        <div class="event-details">
-                            <p class="detail-item">
-                                <strong class="detail-label">Start: </strong>4/8/2010, 12:00:00 AM
-                            </p>
-                            <p class="detail-item">
-                                <strong class="detail-label">End: </strong>4/9/2010, 12:00:00 AM
-                            </p>
-                        </div>
-                    </div>
-                </template>
-                <template id="templ-recurring-badge">
-                    <span class="recurring-badge">Recurring Event</span>
-                </template>
-                `;
-            }
-        );
-        export default customElement.get(TAG_NAME);
+                    </template>
+                    <template id="templ-recurring-badge">
+                        <span class="recurring-badge">Recurring Event</span>
+                    </template>
+                    `;
+                }
+            );
+            export default customElement.get(TAG_NAME);
+        })();
     </script>
 
 </body>
