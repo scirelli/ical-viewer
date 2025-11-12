@@ -6,6 +6,7 @@
     <title>iCalendar (.ics) Event Viewer</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.js"></script>
+    <script src="https://scirelli.github.io/jslib/extras-array.js"></script>
 
     <style>
         body {
@@ -21,25 +22,6 @@
 <body>
     <ical-loader></ical-loader>
     <ical-viewer></ical-viewer>
-
-    <script>
-       if(!Array.prototype.chunk) {
-           Array.prototype.chunk = async function chunk(func, chunkSize=500, index=0) {
-               if(index >= this.length) return Promise.resolve(true);
-               if(chunkSize <= 0) chunkSize = 1;
-               if(index <= 0) index = 0;
-               for(var csz=0; csz<chunkSize && index<this.length; index++, csz++){ // Use var for csz
-                   func(this[index]);
-               }
-               return new Promise(resolve=>{
-                   // Use requestAnimationFrame to yield to the main thread
-                   requestAnimationFrame(() => {
-                       resolve(this.chunk(func, chunkSize, index));
-                   });
-               });
-           }
-       }
-    </script>
 
     <script>
         /**
