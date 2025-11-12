@@ -23,94 +23,6 @@
     <ical-loader></ical-loader>
     <ical-viewer></ical-viewer>
 
-    <script>
-        /**
-         * Helper function to create a styled detail element (e.g., "Label: Value")
-         */
-        function createDetailElement(label, value) {
-            if (!value) {
-                return document.createDocumentFragment();
-            }
-
-            const p = document.createElement('p');
-            p.className = 'detail-item';
-
-            const strong = document.createElement('strong');
-            strong.className = 'detail-label';
-            strong.textContent = `${label}: `;
-
-            const text = document.createTextNode(value);
-
-            p.appendChild(strong);
-            p.appendChild(text);
-
-            return p;
-        }
-
-        /**
-         * Creates a single event card and appends it to the event list.
-         * This function is called by the Array.prototype.chunk method.
-         */
-        function appendEventCard(event) {
-            const eventListElement = document.getElementById('eventList');
-            if (!eventListElement) return;
-
-            const startDate = event.startDate ? event.startDate.toJSDate() : null;
-            const card = document.createElement('div');
-            card.className = 'event-card';
-
-            const header = document.createElement('div');
-            header.className = 'event-card-header';
-
-            const summary = document.createElement('h3');
-            summary.className = 'event-summary';
-            summary.textContent = event.summary || 'No Title';
-            header.appendChild(summary);
-
-            const toggleIcon = document.createElement('span');
-            toggleIcon.className = 'toggle-icon';
-            toggleIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
-            header.appendChild(toggleIcon);
-
-            card.appendChild(header);
-
-            const detailsContainer = document.createElement('div');
-            detailsContainer.className = 'event-details hidden';
-
-            const start = startDate ? startDate.toLocaleString() : 'N/A';
-            detailsContainer.appendChild(createDetailElement('Start', start));
-
-            const end = event.endDate ? event.endDate.toJSDate().toLocaleString() : 'N/A';
-            detailsContainer.appendChild(createDetailElement('End', end));
-
-            detailsContainer.appendChild(createDetailElement('Location', event.location));
-            detailsContainer.appendChild(createDetailElement('Description', event.description));
-
-            const organizerProp = vevent.getFirstProperty('organizer'); // <-- Use vevent
-            let organizerName = null;
-            if (organizerProp) {
-                organizerName = organizerProp.getParameter('cn') || organizerProp.getValue().toString();
-                organizerName = organizerName.replace('MAILTO:', '');
-            }
-            detailsContainer.appendChild(createDetailElement('Organizer', organizerName));
-
-            if (event.isRecurring()) {
-                const recurringBadge = document.createElement('span');
-                recurringBadge.className = 'recurring-badge';
-                recurringBadge.textContent = 'Recurring Event';
-                detailsContainer.appendChild(recurringBadge);
-            }
-
-            card.appendChild(detailsContainer);
-
-            header.addEventListener('click', () => {
-                detailsContainer.classList.toggle('hidden');
-                toggleIcon.classList.toggle('rotate-180');
-            });
-
-            eventListElement.appendChild(card);
-        }
-    </script>
     <script >
         (function icalLoader() {
             const TAG_NAME = 'ical-loader';
@@ -355,6 +267,8 @@
                         customElements.define(TAG_NAME, iCalViewer);
                     }
 
+                    #eventCardTemplElm;
+
                     constructor() {
                         super();
                         this.attachShadow({ mode: 'open' });
@@ -375,7 +289,6 @@
                     }
 
                     render() {
-                        //const clone2 = template.content.cloneNode(true)
                         let template = document.createElement('div'),
                             styles = document.createElement('style');
                         template.innerHTML = iCalViewer.html;
@@ -385,6 +298,7 @@
 
                     _initDom(rootElem) {
                         rootElem.append(...this.render());
+                        this.#eventCardTemplElm = this.shadowRoot.querySelector('#templ-event-card');
                         return this;
                     }
 
@@ -398,8 +312,21 @@
                         this._addItem(evt.detail.icalEvent);
                     }
 
-                    _addItem(itm) {
-                        console.debug(itm);
+                    _addItem(iCalEvent) {
+                        if (!iCalEvent) return;
+                        console.debug(iCalEvent);
+
+                        const startDateStr = iCalEvent.startDate ? iCalEvent.startDate.toJSDate().toLocaleString() : 'N/A',
+                            endDateStr = event.endDate ? event.endDate.toJSDate().toLocaleString() : 'N/A',
+                            summary = event.summary || 'No Title',
+                            locationStr = event.location,
+                            description = event.description;
+                        if (event.isRecurring()) {
+                        }
+                    }
+
+                    _createEventCardElm() {
+                        const clone2 = this.#eventCardTemplElm.content.cloneNode(true);
                     }
 
                     static css = `
