@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iCalendar (.ics) Event Viewer</title>
-    <!-- 1. ical.js library for parsing iCalendar files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.js"></script>
-    
-    <!-- 2. Custom Vanilla CSS (Replaces Tailwind) -->
+
     <style>
-        /* --- Base Styles --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             background-color: #F3F4F6;
@@ -20,13 +17,12 @@
         }
 
         .container {
-            max-width: 72rem; /* 1152px */
+            max-width: 72rem;
             margin-left: auto;
             margin-right: auto;
             padding: 1rem;
         }
 
-        /* --- Header & File Input --- */
         .page-header {
             background-color: #ffffff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -75,11 +71,10 @@
             background-color: #1D4ED8;
         }
 
-        /* --- NEW: Jump Controls --- */
         #jumpControls {
             display: flex;
             gap: 0.75rem;
-            align-items: flex-end; /* Align items to bottom */
+            align-items: flex-end;
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 1px solid #E5E7EB;
@@ -115,7 +110,6 @@
             color: #9CA3AF;
         }
         #jumpButton {
-            /* Reuse file button styles */
             cursor: pointer;
             background-color: #1F2937;
             color: #ffffff;
@@ -125,14 +119,13 @@
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.875rem; /* Match select */
-            height: 2.375rem; /* Match select height */
+            font-size: 0.875rem;
+            height: 2.375rem;
         }
         #jumpButton:hover {
             background-color: #374151;
         }
-        
-        /* --- Message Area --- */
+
         #messageArea {
             text-align: center;
             padding: 1rem;
@@ -151,40 +144,35 @@
             margin-top: 0.5rem;
         }
 
-        /* --- NEW: Group Headers --- */
         .year-header {
-            font-size: 2.25rem; /* 36px */
+            font-size: 2.25rem;
             font-weight: 800;
             color: #111827;
             margin-top: 3rem;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
             border-bottom: 3px solid #D1D5DB;
-            /* Span full grid width */
-            grid-column: 1 / -1; 
+            grid-column: 1 / -1;
         }
         .month-header {
-            font-size: 1.875rem; /* 30px */
+            font-size: 1.875rem;
             font-weight: 700;
             color: #1F2937;
             margin-top: 2rem;
             margin-bottom: 0.5rem;
-            /* Span full grid width */
-            grid-column: 1 / -1; 
+            grid-column: 1 / -1;
         }
         .day-header {
-            font-size: 1.25rem; /* 20px */
+            font-size: 1.25rem;
             font-weight: 600;
             color: #374151;
             margin-top: 1.5rem;
             margin-bottom: 0.5rem;
             padding-bottom: 0.25rem;
             border-bottom: 1px solid #E5E7EB;
-            /* Span full grid width */
-            grid-column: 1 / -1; 
+            grid-column: 1 / -1;
         }
 
-        /* --- Event List & Cards --- */
         #eventList {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -192,7 +180,7 @@
         }
         /* --- UPDATED: Use <details> tag --- */
         .event-card {
-            display: block; /* Required for <details> */
+            display: block;
             background-color: #ffffff;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-radius: 0.5rem;
@@ -226,7 +214,7 @@
             color: #1D4ED8;
             margin: 0;
             /* Allow header to shrink but title to wrap */
-            min-width: 0; 
+            min-width: 0;
             word-wrap: break-word;
             flex-grow: 1; /* Allow summary to take remaining space */
         }
@@ -241,7 +229,7 @@
             width: 1.25rem;
             color: #6B7280;
         }
-        
+
         /* --- NEW: Rotate icon when <details> is open --- */
         .event-card[open] .toggle-icon {
             transform: rotate(180deg);
@@ -253,7 +241,7 @@
             padding-top: 1rem;
             border-top: 1px solid #E5E7EB;
         }
-        
+
         /* --- NEW: Description List Styles --- */
         .detail-list {
             display: grid;
@@ -311,11 +299,11 @@
 <body>
 
     <div class="container">
-        
+
         <header class="page-header">
             <h1>iCalendar (.ics) Event Viewer</h1>
             <p>Upload your .ics file to see all the events listed as cards below.</p>
-            
+
             <!-- Styled File Input -->
             <div class="file-input-container">
                 <label for="icsFile" class="file-input-wrapper">
@@ -373,7 +361,7 @@
         </script>
     <script>
         document.getElementById('icsFile').addEventListener('change', handleFileSelect, false);
-        
+
         // --- NEW: Add listeners for jump controls ---
         const yearSelect = document.getElementById('yearSelect');
         const monthSelect = document.getElementById('monthSelect');
@@ -387,7 +375,7 @@
         // --- Keep track of current headers ---
         let currentYear = null;
         let currentMonth = null;
-        
+
         // --- NEW: Store date data for jump controls ---
         let dateJumpData = {};
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -424,10 +412,10 @@
                 try {
                     // 1. Parse the iCalendar data using ical.js
                     const jcalData = ICAL.parse(fileContent);
-                    
+
                     // 2. Wrap the jcal data in a component
                     const vcalendar = new ICAL.Component(jcalData);
-                    
+
                     // 3. Get all 'vevent' (event) subcomponents
                     const vevents = vcalendar.getAllSubcomponents('vevent');
 
@@ -442,7 +430,7 @@
                     // 4. --- NEW: Process all events into a flat list of occurrences ---
                     let allEventInstances = [];
                     const iterLimit = 500; // Safety limit for recurring events
-                    
+
                     // --- FIX: More robust time window calculation ---
                     const now = ICAL.Time.now();
                     if (!now) {
@@ -453,7 +441,7 @@
                     // --- Clone 'now' first, then call addDuration on the clone. ---
                     const iterStart = now.clone();
                     iterStart.addDuration(new ICAL.Duration({ days: -365 }));
-                    
+
                     const iterEnd = now.clone();
                     iterEnd.addDuration(new ICAL.Duration({ days: 365 }));
 
@@ -461,22 +449,22 @@
                     // --- FIX: Add guard clauses to ensure ical.js returned valid times ---
                     if (!iterStart || !iterEnd) {
                         // --- More explicit logging ---
-                        console.error("Fatal: Could not calculate time window.", { 
-                            now: now ? now.toString() : "undefined", 
-                            iterStart: iterStart ? iterStart.toString() : "undefined", 
-                            iterEnd: iterEnd ? iterEnd.toString() : "undefined" 
+                        console.error("Fatal: Could not calculate time window.", {
+                            now: now ? now.toString() : "undefined",
+                            iterStart: iterStart ? iterStart.toString() : "undefined",
+                            iterEnd: iterEnd ? iterEnd.toString() : "undefined"
                         });
                         throw new Error("Fatal: Could not calculate time window for recurring events.");
                     }
 
                     for (const vevent of vevents) {
                         const event = new ICAL.Event(vevent);
-                        
+
                         if (event.isRecurring()) {
                             const iter = event.iterator(iterStart);
                             let next;
                             let i = 0;
-                            
+
                             while (i < iterLimit && (next = iter.next())) {
                                 if (next.compare(iterEnd) > 0) {
                                     break; // Stop iterating if we're past 1 year from now
@@ -498,30 +486,30 @@
                     // 6. --- NEW: Create sorted day-by-day tasks ---
                     let dayTasks = [];
                     const sortedYears = Object.keys(groupedByYear).sort((a, b) => a - b);
-                    
+
                     dateJumpData = {}; // Clear and rebuild jump data
 
                     for (const year of sortedYears) {
                         const groupedByMonth = groupBy(groupedByYear[year], e => e.renderDate.getMonth());
                         const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => a - b);
-                        
+
                         // --- NEW: Store month data for jump controls ---
                         dateJumpData[year] = sortedMonths.map(Number); // Store array of month numbers
 
                         for (const month of sortedMonths) {
                             const groupedByDay = groupBy(groupedByMonth[month], e => e.renderDate.getDate());
                             const sortedDays = Object.keys(groupedByDay).sort((a, b) => a - b);
-                            
+
                             for (const day of sortedDays) {
                                 const eventsForDay = groupedByDay[day];
-                                
+
                                 // Sort events for the day: All-day first, then by start time
                                 eventsForDay.sort((a, b) => {
                                     if (a.isAllDay && !b.isAllDay) return -1;
                                     if (!a.isAllDay && b.isAllDay) return 1;
                                     return a.startDate.getTime() - b.startDate.getTime();
                                 });
-                                
+
                                 dayTasks.push({
                                     year: year,
                                     month: month, // 0-11
@@ -540,10 +528,10 @@
 
                     // 7. --- NEW: Process tasks in chunks ---
                     messageArea.innerHTML = `<p class="message-info">Rendering ${allEventInstances.length} event instances...</p>`;
-                    
+
                     // This 'await' is now valid because reader.onload is async
                     await dayTasks.chunk(renderDayGroup, 1); // Render 1 day at a time
-                    
+
                     messageArea.innerHTML = ''; // All done
 
                 } catch (err) {
@@ -565,12 +553,12 @@
             const s = eventOrDetails.startDate.toJSDate();
             const e = eventOrDetails.endDate.toJSDate();
             const isAllDay = eventOrDetails.startDate.isDate;
-            
+
             // Get component for organizer
             const component = eventOrDetails.item ? eventOrDetails.item.component : eventOrDetails.component;
-            
+
             // Clone to avoid modifying the original
-            let currentDay = new Date(s.getFullYear(), s.getMonth(), s.getDate()); 
+            let currentDay = new Date(s.getFullYear(), s.getMonth(), s.getDate());
 
             // Handle edge case where event ends on the same day it starts
             // and `currentDay < e` check might fail if it's an all-day event
@@ -591,7 +579,7 @@
                     organizer: getOrganizer(component),
                     isRecurring: eventOrDetails.isRecurring ? eventOrDetails.isRecurring() : (eventOrDetails.item ? eventOrDetails.item.isRecurring() : false)
                 });
-                
+
                 // Move to the next day
                 currentDay.setDate(currentDay.getDate() + 1);
 
@@ -657,7 +645,7 @@
                 yearHeader.id = `year-${currentYear}`;
                 eventListElement.appendChild(yearHeader);
             }
-            
+
             if (dayTask.month !== currentMonth) {
                 currentMonth = dayTask.month;
                 const monthHeader = document.createElement('h3');
@@ -667,13 +655,13 @@
                 monthHeader.id = `month-${dayTask.year}-${currentMonth}`;
                 eventListElement.appendChild(monthHeader);
             }
-            
+
             // Add Day header
             const dayHeader = document.createElement('h4');
             dayHeader.className = 'day-header';
             dayHeader.textContent = `${dayTask.date.toLocaleString('default', { weekday: 'long' })}, ${dayTask.day}`;
             eventListElement.appendChild(dayHeader);
-            
+
             // Add cards for this day
             for (const eventData of dayTask.events) {
                 appendEventCard(eventData); // Pass the processed data
@@ -690,14 +678,14 @@
             if (!eventListElement) return;
 
             // --- Event data is already processed ---
-            
+
             // --- UPDATED: Card creation using <details> and <summary> ---
             const card = document.createElement('details'); // <details> tag
             card.className = 'event-card';
 
             const header = document.createElement('summary'); // <summary> tag
             header.className = 'event-card-header';
-            
+
             // --- NEW: Add Time Label ---
             const timeLabel = document.createElement('span');
             timeLabel.className = 'time-label';
@@ -720,12 +708,12 @@
             toggleIcon.className = 'toggle-icon';
             toggleIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
             header.appendChild(toggleIcon);
-            
+
             card.appendChild(header);
 
             const detailsContainer = document.createElement('div');
             detailsContainer.className = 'event-details'; // No 'hidden' class
-            
+
             // --- NEW: Use <dl> for details ---
             const dl = document.createElement('dl');
             dl.className = 'detail-list';
@@ -733,17 +721,17 @@
             const start = eventData.startDate ? eventData.startDate.toLocaleString() : 'N/A';
             dl.appendChild(createDetailTerm('Start'));
             dl.appendChild(createDetailDescription(start));
-            
+
             const end = eventData.endDate ? eventData.endDate.toLocaleString() : 'N/A';
             dl.appendChild(createDetailTerm('End'));
             dl.appendChild(createDetailDescription(end));
 
             dl.appendChild(createDetailTerm('Location'));
             dl.appendChild(createDetailDescription(eventData.location));
-            
+
             dl.appendChild(createDetailTerm('Description'));
             dl.appendChild(createDetailDescription(eventData.description, true)); // true for description
-            
+
             dl.appendChild(createDetailTerm('Organizer'));
             dl.appendChild(createDetailDescription(eventData.organizer));
 
@@ -757,9 +745,9 @@
             }
 
             card.appendChild(detailsContainer);
-            
+
             // --- REMOVED: Click listener is no longer needed ---
-            
+
             eventListElement.appendChild(card);
         }
 
